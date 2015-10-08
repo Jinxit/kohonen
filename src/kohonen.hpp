@@ -11,21 +11,23 @@ namespace annalisa
     {
     public:
         // returns how much a node influences a neighbouring node
-        using radius_function = std::function<float(unsigned int,
-                                                    const Node&, size_t,
-                                                    const Node&, size_t);
+        using radius_function = std::function<float(unsigned int, // current iteration
+                                                    const Node&, // winner node
+                                                    const Node&)>; // other node
 
 
         // returns the distance between an input and a node
-        using distance_function = std::function<float(unsigned int,
-                                                      const Node&, size_t,
-                                                      const Input&, size_t);
+        using distance_function = std::function<float(unsigned int, // current iteration
+                                                      const Node&,
+                                                      const Input&)>;
 
         // moves a node towards an input, returns a scalar of how much it moved
         // the output scalar is compared with min_diff in the update
-        using attract_function = std::function<float(unsigned int,
-                                                     Node&, size_t,
-                                                     const Input&, size_t);
+        using attract_function = std::function<float(unsigned int, // current iteration
+                                                     float, // influence from radius
+                                                            // and learning_rate
+                                                     Node&, // node to be moved
+                                                     const Input&)>; // input to move towards
 
         kohonen(std::vector<Node> nodes,
                 radius_function radius,
