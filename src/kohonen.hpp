@@ -10,10 +10,10 @@ namespace annalisa
     class kohonen
     {
     public:
-        // returns how much to move the neighbours of the node
+        // returns how much a node influences a neighbouring node
         using radius_function = std::function<float(unsigned int,
                                                     const Node&, size_t,
-                                                    const Input&, size_t);
+                                                    const Node&, size_t);
 
 
         // returns the distance between an input and a node
