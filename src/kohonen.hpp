@@ -1,8 +1,8 @@
 #pragma once
 
 #include <vector>
-#include <string>
 #include <functional>
+#include <random>
 
 namespace annalisa
 {
@@ -46,51 +46,51 @@ namespace annalisa
         void update(const std::vector<Input>& inputs,
                     unsigned int num_iterations, float min_diff)
         {
-            // as iterations goes to 0
-            for (int i = 0; i < num_iterations; i++)
+            std::uniform_int_distribution<size_t> random(0, inputs.size() - 1);
+            for (unsigned int i = 0; i < num_iterations; i++)
             {
-                double diff_sum = 0.0;
+                auto diff_sum = 0.0f;
 
-                TSP::Visualizer::clear();
-                for (auto & data : dataset)
-                {
-                    TSP::Visualizer::draw_circle(data[0] * 0.14, data[1] * 0.14, 3, 8, 50, 80, 255);
-                }
-                for (unsigned int w = 0; w < weights.size(); w++)
-                {
-                    TSP::Visualizer::draw_circle(weights[w][0] * 0.14, weights[w][1] * 0.14, 4, 5, 255, 120, 0);
-                    TSP::Visualizer::draw_line(weights[w][0] * 0.14, weights[w][1] * 0.14,
-                        weights[(w + 1) % weights.size()][0] * 0.14,
-                        weights[(w + 1) % weights.size()][1] * 0.14);
-                }
-                unsigned int dataIndex = unifRandInt(0, dataset.size() - 1);
-                auto & data = dataset[dataIndex];
-                auto winner = findBestMatchingNode(startIterations - iterations, dataIndex, data);
-                TSP::Visualizer::draw_circle(weights[winner][0] * 0.14, weights[winner][1] * 0.14, 4, 6, 50, 255, 20);
-                TSP::Visualizer::draw_circle(data[0] * 0.14, data[1] * 0.14, 3, 10, 255, 255, 0);
-                TSP::Visualizer::render();
+                auto& chosen_input = inputs[random(gen)];
 
-                for (unsigned int w = 0; w < weights.size(); w++)
+                auto winner = nodes[0];
                 {
-                    auto influence = radiusFunction(startIterations - iterations,
-                        weights.size(), winner, weights[winner], w, weights[w]);
-                    if (influence == 0)
-                        continue;
+                    auto winner_distance = distance(i, winner, chosen_input);
 
-                    for (unsigned int i = 0; i < weights[w].size(); i++)
+                    for (size_t j = 1; j < nodes.size(); i++)
                     {
-                        auto diff = learningRate * influence * (data[i] - weights[w][i]);
-                        weights[w][i] += diff;
-                        if (check)
+                        auto dist = distance(i, nodes[j], chosen_input);
+                        if (dist < winner_distance)
                         {
-                            diffSum += abs(diff);
+                            winner = nodes[j];
+                            winner_distance = dist;
                         }
                     }
                 }
 
-                learningRate *= learningDecay;
+
+                for (size_t k = 0; k < nodes.size(); k++)
+                {
+                    auto influence = radius(i, winner, nodes[k]);
+                    if (influence == 0)
+                        continue;
+
+                    diff_sum += attract(i, learning_rate * influence, winner, chosen_input);
+                }
+
+                if (diff_sum < min_diff)
+                {
+                    return;
+                }
+
+                learning_rate *= learning_decay;
             }
 
+        }
+
+        const std::vector<Node>& get_nodes() const
+        {
+            return nodes;
         }
 
         size_t size() const
@@ -99,11 +99,12 @@ namespace annalisa
         }
 
     private:
-        std::vector<Data> nodes;
+        std::vector<Node> nodes;
         radius_function radius;
         distance_function distance;
         attract_function attract;
         float learning_rate;
         float learning_decay;
+        std::mt19937 gen;
     };
 }
