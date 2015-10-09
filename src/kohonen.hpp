@@ -49,24 +49,34 @@ namespace annalisa
             std::uniform_int_distribution<size_t> random(0, inputs.size() - 1);
             for (unsigned int i = 0; i < num_iterations; i++)
             {
+                if (i % 1 == 0)
+                {
+                    TSP::Visualizer::clear();
+                    std::cout << (100 * float(i) / num_iterations) << "%" << std::endl;
+                    for (auto& node : nodes)
+                    {
+                        TSP::Visualizer::draw_circle(10 + node.x * 3, 10 + node.y * 3, 4, 5, 255, 120, 0);
+                    }
+                }
                 auto diff_sum = 0.0f;
 
                 auto& chosen_input = inputs[random(gen)];
 
-                auto winner = nodes[0];
+                auto winner_index = 0;
                 {
-                    auto winner_distance = distance(i, winner, chosen_input);
+                    auto winner_distance = distance(i, nodes[winner_index], chosen_input);
 
-                    for (size_t j = 1; j < nodes.size(); i++)
+                    for (size_t j = 1; j < nodes.size(); j++)
                     {
                         auto dist = distance(i, nodes[j], chosen_input);
                         if (dist < winner_distance)
                         {
-                            winner = nodes[j];
+                            winner_index = j;
                             winner_distance = dist;
                         }
                     }
                 }
+                auto& winner = nodes[winner_index];
 
 
                 for (size_t k = 0; k < nodes.size(); k++)
