@@ -29,16 +29,23 @@ namespace annalisa
                                                      Node&, // node to be moved
                                                      const Input&)>; // input to move towards
 
-        kohonen(std::vector<Node> nodes,
+        // moves two nodes away from eachother
+        using repel_function = std::function<void(unsigned int,
+                                                  Node&,
+                                                  Node&)>;
+
+        kohonen(const std::vector<Node>& nodes,
                 radius_function radius,
                 distance_function distance,
                 attract_function attract,
+                repel_function repel,
                 float learning_rate,
                 float learning_decay)
             : nodes(nodes),
               radius(radius),
               distance(distance),
               attract(attract),
+              repel(repel),
               learning_rate(learning_rate),
               learning_decay(learning_decay)
         { };
@@ -78,15 +85,35 @@ namespace annalisa
                 }
                 auto& winner = nodes[winner_index];
 
-
+                // note: dumb shit
+                auto max_radius = 0.0f;
+                auto max_radius_index = 0;
                 for (size_t k = 0; k < nodes.size(); k++)
                 {
                     auto influence = radius(i, winner, nodes[k]);
-                    if (influence == 0)
-                        continue;
-
+                    if (influence > max_radius && k != winner_index)
+                    {
+                        max_radius = influence;
+                        max_radius_index = k;
+                    }
                     diff_sum += attract(i, learning_rate * influence, winner, chosen_input);
                 }
+                //repel(i, winner, nodes[max_radius_index]);
+
+                /*for (size_t l = 0; l < nodes.size(); l++)
+                {
+                    if (l == winner_index)
+                        continue;
+                    repel(i, winner, nodes[l]);
+                }*/
+                for (auto it = nodes.begin(); it != nodes.end(); ++it)
+                {
+                    for (auto it2 = it + 1; it2 != nodes.end(); ++it2)
+                    {
+                        repel(i, *it, *it2);
+                    }
+                }
+                TSP::Visualizer::render();
 
                 if (diff_sum < min_diff)
                 {
@@ -113,6 +140,7 @@ namespace annalisa
         radius_function radius;
         distance_function distance;
         attract_function attract;
+        repel_function repel;
         float learning_rate;
         float learning_decay;
         std::mt19937 gen;
